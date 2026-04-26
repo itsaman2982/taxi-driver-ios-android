@@ -77,7 +77,7 @@ class _RatePassengerScreenState extends State<RatePassengerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -148,7 +148,7 @@ class _RatePassengerScreenState extends State<RatePassengerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -188,7 +188,7 @@ class _RatePassengerScreenState extends State<RatePassengerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -246,7 +246,7 @@ class _RatePassengerScreenState extends State<RatePassengerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -344,7 +344,7 @@ class _RatePassengerScreenState extends State<RatePassengerScreen> {
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? activeTextColor : activeBorderColor.withOpacity(0.8),
+            color: isSelected ? activeTextColor : activeBorderColor.withValues(alpha: 0.8),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

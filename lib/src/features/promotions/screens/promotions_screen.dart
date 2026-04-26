@@ -69,10 +69,10 @@ class PromotionsScreen extends StatelessWidget {
               icon: Icons.card_giftcard,
               title: 'Holiday Incentive',
               subtitle: 'Earn 2x bonuses on all trips\nStarts Dec 23 - Dec 26',
-              rightSide: Column(
+              rightSide: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
+                children: [
                   Text('2x Bonus', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 13)),
                   SizedBox(height: 2),
                   Text('In 5 days', style: TextStyle(color: Colors.grey, fontSize: 11)),
@@ -83,10 +83,10 @@ class PromotionsScreen extends StatelessWidget {
               icon: Icons.star,
               title: 'New Year Boost',
               subtitle: '₹5,000 bonus for 50 trips\nStarts Jan 1 - Jan 7',
-              rightSide: Column(
+              rightSide: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
+                children: [
                   Text('₹5,000', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
                   SizedBox(height: 2),
                   Text('In 12 days', style: TextStyle(color: Colors.grey, fontSize: 11)),
@@ -110,7 +110,7 @@ class PromotionsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -124,7 +124,7 @@ class PromotionsScreen extends StatelessWidget {
                        Container(
                          padding: const EdgeInsets.all(8),
                          decoration: BoxDecoration(
-                           color: Colors.red.withOpacity(0.1),
+                           color: Colors.red.withValues(alpha: 0.1),
                            shape: BoxShape.circle,
                          ),
                          child: const Icon(Icons.location_on, color: Colors.red, size: 20),
@@ -146,11 +146,11 @@ class PromotionsScreen extends StatelessWidget {
                      ],
                    ),
                    const SizedBox(height: 16),
-                   _buildHotspotItem('Downtown Mall', '2.5x', Colors.red.withOpacity(0.05), Colors.red),
+                   _buildHotspotItem('Downtown Mall', '2.5x', Colors.red.withValues(alpha: 0.05), Colors.red),
                    const SizedBox(height: 8),
-                   _buildHotspotItem('Airport Terminal', '1.8x', Colors.orange.withOpacity(0.05), Colors.orange),
+                   _buildHotspotItem('Airport Terminal', '1.8x', Colors.orange.withValues(alpha: 0.05), Colors.orange),
                    const SizedBox(height: 8),
-                   _buildHotspotItem('Business District', '1.5x', Colors.amber.withOpacity(0.05), Colors.amber.shade700),
+                   _buildHotspotItem('Business District', '1.5x', Colors.amber.withValues(alpha: 0.05), Colors.amber.shade700),
                 ],
               ),
             ),
@@ -170,7 +170,7 @@ class PromotionsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.sync, color: Colors.white, size: 20),
@@ -191,12 +191,12 @@ class PromotionsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('Current Streak', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         Text('3 trips', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
@@ -230,7 +230,7 @@ class PromotionsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                  boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -241,8 +241,8 @@ class PromotionsScreen extends StatelessWidget {
                   Container(
                     width: 60,
                     height: 60,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD1FAE5), // Light Green
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFD1FAE5), // Light Green
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.emoji_events, color: Color(0xFF10B981), size: 30),
@@ -389,7 +389,7 @@ class PromotionsScreen extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -415,7 +415,7 @@ class PromotionsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

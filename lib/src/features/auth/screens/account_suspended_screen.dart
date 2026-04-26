@@ -26,8 +26,8 @@ class AccountSuspendedScreen extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEE2E2), // Light red
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEE2E2), // Light red
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -327,11 +327,11 @@ class AccountSuspendedScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.info, color: Color(0xFF2563EB), size: 18),
-                      const SizedBox(width: 8),
-                      const Text(
+                      Icon(Icons.info, color: Color(0xFF2563EB), size: 18),
+                      SizedBox(width: 8),
+                      Text(
                         'Need Help?',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,

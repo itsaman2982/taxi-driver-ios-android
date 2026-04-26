@@ -238,11 +238,11 @@ class _PayoutSettingsScreenState extends State<PayoutSettingsScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Linked Payout Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const Icon(Icons.shield_outlined, size: 20),
+              Text('Linked Payout Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Icon(Icons.shield_outlined, size: 20),
             ],
           ),
           const SizedBox(height: 16),
@@ -355,11 +355,11 @@ class _PayoutSettingsScreenState extends State<PayoutSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Instant Payout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              const Icon(Icons.bolt, color: Colors.white, size: 20),
+              Text('Instant Payout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Icon(Icons.bolt, color: Colors.white, size: 20),
             ],
           ),
           const SizedBox(height: 8),
@@ -384,10 +384,12 @@ class _PayoutSettingsScreenState extends State<PayoutSettingsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Minimum balance ₹${config['min_withdrawal_limit'] ?? 100} required')));
                       return;
                    }
-                   final success = await Provider.of<EarningsProvider>(context, listen: false).requestWithdrawal(balance, methods.first['_id']);
+                   final messenger = ScaffoldMessenger.of(context);
+                   final earningsProvider = Provider.of<EarningsProvider>(context, listen: false);
+                   final success = await earningsProvider.requestWithdrawal(balance, methods.first['_id']);
                    if (success) {
-                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payout request submitted successfully')));
-                     Provider.of<EarningsProvider>(context, listen: false).fetchTransactions();
+                     messenger.showSnackBar(const SnackBar(content: Text('Payout request submitted successfully')));
+                     earningsProvider.fetchTransactions();
                    }
                  },
                  style: ElevatedButton.styleFrom(

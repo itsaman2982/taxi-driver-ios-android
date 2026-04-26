@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
 import 'package:taxi_driver/src/core/providers/driver_provider.dart';
 import 'package:taxi_driver/src/features/navigation/main_navigation_screen.dart';
-import 'package:taxi_driver/src/features/registration/screens/personal_information_screen.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -30,21 +30,21 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print('📤 Driver login attempt: ${_emailController.text}');
+      AppLogger.info('Driver login attempt: ${_emailController.text}');
       
       final response = await ApiService().post('auth/login', {
         'email': _emailController.text.trim(),
         'password': _passwordController.text,
       });
 
-      print('📥 Login response: $response');
+      AppLogger.info('Login response: $response');
 
       if (mounted) {
         if (response is Map && response['success'] == true) {
           final driverData = Map<String, dynamic>.from(response['data']);
           
-          print('✅ Login successful for: ${driverData['email']}');
-          print('   Role: ${driverData['role']}');
+          AppLogger.info('Login successful for: ${driverData['email']}');
+          AppLogger.info('Role: ${driverData['role']}');
           
           // Verify this is a driver account
           if (driverData['role'] != 'driver') {
@@ -56,20 +56,19 @@ class _SignInScreenState extends State<SignInScreen> {
           if (mounted) {
             // Navigate without passing the key - let the widget create it internally
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+              MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
             );
           }
         } else {
           final errorMsg = response is Map ? (response['message'] ?? 'Login failed') : 'Invalid response from server';
-          print('❌ Login failed: $errorMsg');
+          AppLogger.error('Login failed: $errorMsg');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
           );
         }
       }
     } on DioException catch (e) {
-      print('❌ DioException: ${e.response?.statusCode} - ${e.message}');
-      print('   Response data: ${e.response?.data}');
+      AppLogger.error('DioException [${e.response?.statusCode}]: ${e.message}', e.response?.data);
       
       String errorMsg;
       if (e.response?.statusCode == 401) {
@@ -88,7 +87,7 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       }
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      AppLogger.error('Unexpected error during sign in', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
@@ -107,7 +106,7 @@ class _SignInScreenState extends State<SignInScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // ... (circles stay the same)
+          // Background decorations
           Positioned(
             top: -100,
             right: -100,
@@ -115,7 +114,7 @@ class _SignInScreenState extends State<SignInScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
+                color: Colors.blue.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
             ),
@@ -127,7 +126,7 @@ class _SignInScreenState extends State<SignInScreen> {
               width: 300,
               height: 300,
               decoration: BoxDecoration(
-                color: Colors.yellow.withOpacity(0.05),
+                color: Colors.yellow.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
             ),
@@ -189,16 +188,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Sign in to start earning and manage\nyour rides efficiently',
-                      textAlign: TextAlign.center
-
-                      ,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.grey.shade600,
                       ),
                     ),
                     const SizedBox(height: 30),
-                    // Phone Number
+                    // Email
                     const Text(
                       'Email Address',
                       style: TextStyle(
@@ -295,29 +292,6 @@ class _SignInScreenState extends State<SignInScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // New Driver? Sign Up (HIDDEN as per salary-based hiring model)
-                    /*
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("New Driver?"),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) => const PersonalInformationScreen()),
-                            );
-                          },
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: Color(0xFF3B82F6),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    */
                     
                     // Fleet Contact Info
                     Container(
@@ -369,3 +343,4 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 }
+

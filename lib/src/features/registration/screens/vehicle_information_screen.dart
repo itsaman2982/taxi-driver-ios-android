@@ -37,6 +37,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
     try {
       final List<XFile> images = await _picker.pickMultiImage();
       if (images.isNotEmpty) {
+        if (!mounted) return;
         final provider = Provider.of<RegistrationProvider>(context, listen: false);
         for (var image in images) {
           provider.addVehiclePhoto(File(image.path));
@@ -159,7 +160,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(12),
+                color: Colors.blue.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -174,7 +175,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withAlpha(12),
+                  color: Colors.yellow.withValues(alpha: 12 / 255),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -197,7 +198,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                           color: Colors.black,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.blue.withAlpha(50),
+                            color: Colors.blue.withValues(alpha: 50 / 255),
                             width: 8,
                           ),
                         ),
@@ -230,7 +231,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                     const Text('Vehicle Type *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _selectedVehicleType,
+                      initialValue: _selectedVehicleType,
                       items: _vehicleTypes.map((type) {
                         return DropdownMenuItem(
                           value: type,
@@ -316,7 +317,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                     const Text('Vehicle Color *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _selectedVehicleColor,
+                      initialValue: _selectedVehicleColor,
                       items: _vehicleColors.map((color) {
                         return DropdownMenuItem(
                           value: color,
@@ -437,7 +438,7 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withAlpha(25),
+                        color: Colors.orange.withValues(alpha: 25 / 255),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -492,12 +493,12 @@ class _VehicleInformationScreenState extends State<VehicleInformationScreen> {
                       TextSpan(
                         text: 'By continuing, you agree to our ',
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                        children: [
+                        children: const [
                           TextSpan(
                             text: 'Terms of Service',
                             style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
                           ),
-                          const TextSpan(text: ' and '),
+                          TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
                             style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),

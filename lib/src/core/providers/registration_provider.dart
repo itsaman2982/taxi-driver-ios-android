@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class RegistrationProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -23,7 +24,7 @@ class RegistrationProvider extends ChangeNotifier {
     'policeVerification': null,
   };
   
-  Map<String, Map<String, String>> _documentDetails = {
+  final Map<String, Map<String, String>> _documentDetails = {
     'driverLicense': {'docNumber': '', 'expiryDate': ''},
     'vehicleRegistration': {'docNumber': '', 'expiryDate': ''},
     'insurance': {'docNumber': '', 'expiryDate': ''},
@@ -52,14 +53,14 @@ class RegistrationProvider extends ChangeNotifier {
   // Step 1: Save Personal Information
   void savePersonalInfo(Map<String, dynamic> data) {
     _personalInfo = data;
-    print('📝 Saved Personal Info: $_personalInfo');
+    AppLogger.info('Saved Personal Info: $_personalInfo');
     notifyListeners();
   }
 
   // Step 2: Save Vehicle Information
   void saveVehicleInfo(Map<String, dynamic> data) {
     _vehicleInfo = data;
-    print('🚗 Saved Vehicle Info: $_vehicleInfo');
+    AppLogger.info('Saved Vehicle Info: $_vehicleInfo');
     notifyListeners();
   }
 
@@ -100,35 +101,35 @@ class RegistrationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('🚀 Starting driver registration...');
+      AppLogger.info('Starting driver registration...');
       
       // ========== STEP 1: Register Personal Info ==========
-      print('📝 Step 1: Submitting personal info...');
+      AppLogger.info('Step 1: Submitting personal info...');
       final step1Response = await _apiService.post('driver-registration/register/personal', {
         'fullName': _personalInfo['fullName'] ?? _personalInfo['name'] ?? '',
-        'email': _personalInfo['email'] ?? '${phone}@driver.taxi.app',
+        'email': _personalInfo['email'] ?? '$phone@driver.taxi.app',
         'dateOfBirth': _personalInfo['dob'] ?? '1995-01-01',
         'homeAddress': _personalInfo['address'] ?? 'Address not provided',
         'password': password,
         'phone': phone,
       });
 
-      print('📝 Step 1 Response: $step1Response');
+      AppLogger.info('Step 1 Response: $step1Response');
 
       if (step1Response['success'] != true) {
         _error = step1Response['message'] ?? 'Personal info registration failed';
         _isLoading = false;
         notifyListeners();
-        print('❌ Step 1 failed: $_error');
+        AppLogger.error('Step 1 failed: $_error');
         return false;
       }
 
       _driverId = step1Response['data']?['driverId']?.toString();
-      print('✅ Step 1 completed. Driver ID: $_driverId');
+      AppLogger.info('Step 1 completed. Driver ID: $_driverId');
 
       // ========== STEP 2: Register Vehicle Info (SKIP if empty for fleet/hired drivers) ==========
       if (_vehicleInfo.isNotEmpty) {
-        print('🚗 Step 2: Submitting vehicle info...');
+        AppLogger.info('Step 2: Submitting vehicle info...');
         
         // Parse make and model from combined field
         String makeModel = _vehicleInfo['make'] ?? '';
@@ -139,16 +140,16 @@ class RegistrationProvider extends ChangeNotifier {
         // Upload vehicle photos first
         List<String> uploadedVehiclePhotos = [];
         if (_vehiclePhotos.isNotEmpty) {
-          print('📸 Uploading ${_vehiclePhotos.length} vehicle photos...');
+          AppLogger.info('Uploading ${_vehiclePhotos.length} vehicle photos...');
           for (var photo in _vehiclePhotos) {
             try {
               final uploadResponse = await _apiService.uploadFile('uploads', photo);
               if (uploadResponse['success'] == true && uploadResponse['data'] != null) {
                 uploadedVehiclePhotos.add(uploadResponse['data']['url']);
-                print('✅ Photo uploaded: ${uploadResponse['data']['url']}');
+                AppLogger.info('Photo uploaded: ${uploadResponse['data']['url']}');
               }
             } catch (e) {
-              print('⚠️ Failed to upload vehicle photo: $e');
+              AppLogger.warning('Failed to upload vehicle photo: $e');
             }
           }
         }
@@ -163,22 +164,22 @@ class RegistrationProvider extends ChangeNotifier {
           'vehiclePhotos': uploadedVehiclePhotos,
         });
 
-        print('🚗 Step 2 Response: $step2Response');
+        AppLogger.info('Step 2 Response: $step2Response');
 
         if (step2Response['success'] != true) {
           _error = step2Response['message'] ?? 'Vehicle info registration failed';
           _isLoading = false;
           notifyListeners();
-          print('❌ Step 2 failed: $_error');
+          AppLogger.error('Step 2 failed: $_error');
           return false;
         }
-        print('✅ Step 2 completed.');
+        AppLogger.info('Step 2 completed.');
       } else {
-        print('ℹ️ Skipping Step 2: No vehicle info provided (hiring model)');
+        AppLogger.info('Skipping Step 2: No vehicle info provided (hiring model)');
       }
 
       // ========== STEP 3: Submit Documents ==========
-      print('📄 Step 3: Submitting documents...');
+      AppLogger.info('Step 3: Submitting documents...');
       
       List<Map<String, dynamic>> documentsList = [];
       
@@ -196,7 +197,7 @@ class RegistrationProvider extends ChangeNotifier {
       for (var entry in _documents.entries) {
         if (entry.value != null) {
           try {
-            print('📤 Uploading document: ${entry.key}');
+            AppLogger.info('Uploading document: ${entry.key}');
             final uploadResponse = await _apiService.uploadFile('uploads', entry.value!);
             
             if (uploadResponse['success'] == true && uploadResponse['data'] != null) {
@@ -208,19 +209,19 @@ class RegistrationProvider extends ChangeNotifier {
                 'docNumber': details['docNumber'] ?? 'DOC-${DateTime.now().millisecondsSinceEpoch}',
                 'expiryDate': details['expiryDate'],
               });
-              print('✅ Document uploaded: ${entry.key} -> ${uploadResponse['data']['url']}');
+              AppLogger.info('Document uploaded: ${entry.key} -> ${uploadResponse['data']['url']}');
             } else {
-              print('❌ Failed to upload ${entry.key}: Invalid response');
+              AppLogger.error('Failed to upload ${entry.key}: Invalid response');
             }
           } catch (e) {
-             print('❌ Error uploading document ${entry.key}: $e');
+             AppLogger.error('Error uploading document ${entry.key}', e);
           }
         }
       }
       
       // If no valid documents were uploaded (and we had files), this is a problem
       if (documentsList.isEmpty && _documents.values.any((f) => f != null)) {
-         print('⚠️ Documents were selected but upload failed for all of them.');
+         AppLogger.warning('Documents were selected but upload failed for all of them.');
          // We might want to stop here, but for now let's try with placeholders if it's a demo
          // or just fail if strict. Let's fail to be safe.
          if (_documents.isNotEmpty) {
@@ -233,7 +234,7 @@ class RegistrationProvider extends ChangeNotifier {
       
       // For demo/testing WITHOUT real files, use placeholders if absolutely nothing was uploaded
       if (documentsList.isEmpty) {
-        print('⚠️ No documents uploaded, creating placeholder documents for testing...');
+        AppLogger.warning('No documents uploaded, creating placeholder documents for testing...');
         documentsList = [
           {'type': 'license', 'url': 'https://via.placeholder.com/500?text=License', 'docNumber': 'LIC-001'},
           {'type': 'registration', 'url': 'https://via.placeholder.com/500?text=Registration', 'docNumber': 'REG-001'},
@@ -247,29 +248,29 @@ class RegistrationProvider extends ChangeNotifier {
         'documents': documentsList,
       });
 
-      print('📄 Step 3 Response: $step3Response');
+      AppLogger.info('Step 3 Response: $step3Response');
 
       if (step3Response['success'] != true) {
         _error = step3Response['message'] ?? 'Document submission failed';
         _isLoading = false;
         notifyListeners();
-        print('❌ Step 3 failed: $_error');
+        AppLogger.error('Step 3 failed: $_error');
         return false;
       }
 
       _applicationId = step3Response['data']?['applicationId'] ?? _driverId;
-      print('✅ Step 3 completed. Application ID: $_applicationId');
+      AppLogger.info('Step 3 completed. Application ID: $_applicationId');
 
       _isLoading = false;
       notifyListeners();
-      print('🎉 Registration completed successfully!');
+      AppLogger.info('Registration completed successfully!');
       return true;
 
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
-      print('❌ Registration error: $e');
+      AppLogger.error('Registration error', e);
       return false;
     }
   }
@@ -285,7 +286,7 @@ class RegistrationProvider extends ChangeNotifier {
       }
       return null;
     } catch (e) {
-      print('❌ Error checking application status: $e');
+      AppLogger.error('Error checking application status', e);
       return null;
     }
   }
@@ -310,3 +311,4 @@ class RegistrationProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

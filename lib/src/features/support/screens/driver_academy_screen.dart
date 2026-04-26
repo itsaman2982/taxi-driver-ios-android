@@ -8,8 +8,6 @@ class DriverAcademyScreen extends StatefulWidget {
 }
 
 class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
-  String _selectedCategory = 'All';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,7 +72,8 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
               ),
             ),
@@ -211,11 +210,7 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
       child: ChoiceChip(
         label: Text(label),
         selected: isSelected,
-        onSelected: (selected) {
-          setState(() {
-            _selectedCategory = label;
-          });
-        },
+        onSelected: (selected) {},
         backgroundColor: Colors.white,
         selectedColor: Colors.black,
         labelStyle: TextStyle(
@@ -231,7 +226,8 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
     );
   }
 
-  Widget _buildFeaturedVideo(String title, String subtitle, String duration, {required bool isNew}) {
+  Widget _buildFeaturedVideo(String title, String subtitle, String duration,
+      {required bool isNew}) {
     return Container(
       width: 280,
       decoration: BoxDecoration(
@@ -302,10 +298,11 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                      child: const Icon(Icons.play_arrow,
+                          color: Colors.white, size: 20),
                     ),
                   ],
                 ),
@@ -317,7 +314,8 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
     );
   }
 
-  Widget _buildVideoListItem(String title, String subtitle, String duration, String category, bool isCompleted) {
+  Widget _buildVideoListItem(String title, String subtitle, String duration,
+      String category, bool isCompleted) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(12),
@@ -344,10 +342,11 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.play_arrow, color: Colors.white, size: 16),
+                    child: const Icon(Icons.play_arrow,
+                        color: Colors.white, size: 16),
                   ),
                 ),
               ),
@@ -355,9 +354,10 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
                 bottom: 4,
                 right: 4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.black.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -394,7 +394,8 @@ class _DriverAcademyScreenState extends State<DriverAcademyScreen> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(12),

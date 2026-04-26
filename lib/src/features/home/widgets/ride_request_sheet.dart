@@ -106,8 +106,11 @@ class _RideRequestSheetState extends State<RideRequestSheet>
   String _formatDuration(dynamic duration) {
     if (duration == null) return 'N/A';
     double mins = 0;
-    if (duration is num) mins = duration.toDouble();
-    else if (duration is String) mins = double.tryParse(duration) ?? 0;
+    if (duration is num) {
+      mins = duration.toDouble();
+    } else if (duration is String) {
+      mins = double.tryParse(duration) ?? 0;
+    }
 
     if (mins < 1) {
       int secs = (mins * 60).round();
@@ -134,7 +137,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 3),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, spreadRadius: 1)
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, spreadRadius: 1)
                 ],
               ),
             ),
@@ -171,7 +174,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
       decoration: BoxDecoration(
         color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -245,7 +248,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.05), 
+                  color: Colors.black.withValues(alpha: 0.05), 
                   borderRadius: BorderRadius.circular(12)
                 ),
                 child: Row(
@@ -286,7 +289,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 40, spreadRadius: -5, offset: const Offset(0, 10)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 40, spreadRadius: -5, offset: const Offset(0, 10)),
               ],
             ),
             child: ClipRRect(
@@ -316,7 +319,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: isEmergency ? Colors.red.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                                color: isEmergency ? Colors.red.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(isEmergency ? Icons.warning_amber_rounded : Icons.local_taxi, color: isEmergency ? Colors.red : Colors.black),
@@ -394,7 +397,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
                                         padding: const EdgeInsets.symmetric(vertical: 22),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                                         elevation: 8,
-                                        shadowColor: (isEmergency ? Colors.red : Colors.black).withOpacity(0.5),
+                                        shadowColor: (isEmergency ? Colors.red : Colors.black).withValues(alpha: 0.5),
                                       ),
                                       onPressed: _rideTaken ? null : () => _acceptRide(context, ride, isEmergency),
                                       child: Text(
@@ -423,7 +426,7 @@ class _RideRequestSheetState extends State<RideRequestSheet>
                 child: Container(
                   margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(32),
                   ),
                   child: Center(
@@ -469,16 +472,17 @@ class _RideRequestSheetState extends State<RideRequestSheet>
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     if (isEmergency) {
       final success = await driverProvider.acceptEmergency(ride['breakdownId'].toString());
-      if (success && mounted) {
+      if (success && context.mounted) {
         Navigator.of(context).pop();
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => CustomerPickupScreen(ride: ride)));
       }
     } else {
       final acceptedRide = await driverProvider.acceptRide(ride['_id']);
-      if (acceptedRide != null && mounted) {
+      if (acceptedRide != null && context.mounted) {
         Navigator.of(context).pop();
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => CustomerPickupScreen(ride: acceptedRide)));
       }
     }
   }
 }
+

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
 import 'package:taxi_driver/src/core/providers/registration_provider.dart';
 import 'package:taxi_driver/src/core/providers/driver_provider.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 import 'package:taxi_driver/src/features/navigation/main_navigation_screen.dart';
 
 class ApplicationStatusScreen extends StatefulWidget {
@@ -31,10 +32,10 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
     final vehicleInfo = registrationProvider.vehicleInfo;
     final documents = registrationProvider.documents;
 
-    print('🚀 Starting registration submission...');
-    print('📝 Personal Info: $personalInfo');
-    print('🚗 Vehicle Info: $vehicleInfo');
-    print('📄 Documents: ${documents.keys.where((key) => documents[key] != null).toList()}');
+    AppLogger.info('🚀 Starting registration submission...');
+    AppLogger.debug('📝 Personal Info: $personalInfo');
+    AppLogger.debug('🚗 Vehicle Info: $vehicleInfo');
+    AppLogger.debug('📄 Documents: ${documents.keys.where((key) => documents[key] != null).toList()}');
 
     // Validate that we have the required data
     if (personalInfo.isEmpty) {
@@ -42,7 +43,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
         _isSubmitting = false;
         _error = 'Personal information is missing. Please go back and fill in all required fields.';
       });
-      print('❌ Personal info is empty!');
+      AppLogger.error('❌ Personal info is empty!');
       return;
     }
 
@@ -51,7 +52,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
         _isSubmitting = false;
         _error = 'Phone number is required. Please go back and enter your phone number.';
       });
-      print('❌ Phone is missing!');
+      AppLogger.error('❌ Phone is missing!');
       return;
     }
 
@@ -60,26 +61,26 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
         _isSubmitting = false;
         _error = 'Password is required. Please go back and enter your password.';
       });
-      print('❌ Password is missing!');
+      AppLogger.error('❌ Password is missing!');
       return;
     }
 
     try {
-      print('📞 Calling submitRegistration with phone: ${personalInfo['phone']}');
+      AppLogger.info('📞 Calling submitRegistration with phone: ${personalInfo['phone']}');
       
       final success = await registrationProvider.submitRegistration(
         personalInfo['phone'] ?? '',
         personalInfo['password'] ?? '',
       );
 
-      print('✅ Registration submission result: $success');
-      print('❌ Registration error: ${registrationProvider.error}');
+      AppLogger.info('✅ Registration submission result: $success');
+      AppLogger.error('❌ Registration error: ${registrationProvider.error}');
 
       if (mounted) {
         setState(() {
           _isSubmitting = false;
           if (success) {
-            print('🎉 Registration successful!');
+            AppLogger.info('🎉 Registration successful!');
             // Simulate approval after 3 seconds for demo
             Timer(const Duration(seconds: 3), () async {
               if (mounted) {
@@ -89,7 +90,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                 
                 // Auto-login to get token and populate DriverProvider
                 try {
-                  print('🔄 Attempting auto-login...');
+                  AppLogger.info('🔄 Attempting auto-login...');
                   final loginResponse = await ApiService().post('auth/login', {
                     'email': personalInfo['email'],
                     'password': personalInfo['password'],
@@ -98,23 +99,23 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                   if (loginResponse['success'] == true && mounted) {
                      final driverData = Map<String, dynamic>.from(loginResponse['data']);
                      await Provider.of<DriverProvider>(context, listen: false).setDriver(driverData);
-                     print('✅ Auto-login successful! Driver data set.');
+                     AppLogger.info('✅ Auto-login successful! Driver data set.');
                   } else {
-                     print('⚠️ Auto-login failed: ${loginResponse['message']}');
+                     AppLogger.warning('⚠️ Auto-login failed: ${loginResponse['message']}');
                   }
                 } catch (e) {
-                    print('⚠️ Auto-login exception: $e');
+                    AppLogger.error('⚠️ Auto-login exception: $e');
                 }
               }
             });
           } else {
             _error = registrationProvider.error ?? 'Registration failed. Please try again.';
-            print('❌ Registration failed: $_error');
+            AppLogger.error('❌ Registration failed: $_error');
           }
         });
       }
     } catch (e) {
-      print('💥 Exception during registration: $e');
+      AppLogger.error('💥 Exception during registration: $e');
       if (mounted) {
         setState(() {
           _isSubmitting = false;
@@ -177,7 +178,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(12),
+                color: Colors.blue.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -189,7 +190,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.orange.withAlpha(12),
+                color: Colors.orange.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -209,10 +210,10 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: _error != null 
-                            ? Colors.red.withAlpha(12) 
+                            ? Colors.red.withValues(alpha: 12 / 255) 
                             : _isApproved 
-                                ? Colors.green.withAlpha(12) 
-                                : Colors.blue.withAlpha(12),
+                                ? Colors.green.withValues(alpha: 12 / 255) 
+                                : Colors.blue.withValues(alpha: 12 / 255),
                       ),
                       child: Center(
                         child: Container(
@@ -221,10 +222,10 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _error != null 
-                                ? Colors.red.withAlpha(25) 
+                                ? Colors.red.withValues(alpha: 25 / 255) 
                                 : _isApproved 
-                                    ? Colors.green.withAlpha(25) 
-                                    : Colors.blue.withAlpha(25),
+                                    ? Colors.green.withValues(alpha: 25 / 255) 
+                                    : Colors.blue.withValues(alpha: 25 / 255),
                           ),
                           child: Center(
                             child: Container(
@@ -297,9 +298,9 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.red.withAlpha(25),
+                        color: Colors.red.withValues(alpha: 25 / 255),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red.withAlpha(50)),
+                        border: Border.all(color: Colors.red.withValues(alpha: 50 / 255)),
                       ),
                       child: Column(
                         children: [
@@ -536,7 +537,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                           Switch(
                             value: _notificationsEnabled, 
                             onChanged: (val){ setState(() { _notificationsEnabled = val; }); },
-                            activeColor: Colors.black,
+                            activeThumbColor: Colors.black,
                           )
                         ],
                       ),

@@ -113,11 +113,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                             color: const Color(0xFFEF4444),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(Icons.warning_amber_rounded, color: Colors.white),
-                              const SizedBox(width: 12),
-                              const Expanded(
+                              Icon(Icons.warning_amber_rounded, color: Colors.white),
+                              SizedBox(width: 12),
+                              Expanded(
                                 child: Text(
                                   'Action Required: Some documents are rejected or expired.',
                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -178,9 +178,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     required DocumentStatus status,
     required String details,
     required IconData icon,
-    String? bannerMessage,
-    bool hasUploadAction = false,
-    bool hasUpdateAction = false,
   }) {
     Color statusColor;
     String statusText;
@@ -215,7 +212,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

@@ -33,7 +33,7 @@ class WarehouseReturnScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
+                          color: Colors.blue.withValues(alpha: 0.3),
                           blurRadius: 30,
                           spreadRadius: 10,
                         ),
@@ -62,7 +62,7 @@ class WarehouseReturnScreen extends StatelessWidget {
                 Text(
                   'The replacement driver has taken over the ride. Your mission is complete.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 15, height: 1.5),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 15, height: 1.5),
                 ),
 
                 const SizedBox(height: 40),
@@ -73,7 +73,7 @@ class WarehouseReturnScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF111827),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: Column(
                     children: [
@@ -111,7 +111,7 @@ class WarehouseReturnScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     elevation: 8,
-                    shadowColor: Colors.amber.withOpacity(0.4),
+                    shadowColor: Colors.amber.withValues(alpha: 0.4),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -130,7 +130,7 @@ class WarehouseReturnScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 22),
@@ -142,7 +142,7 @@ class WarehouseReturnScreen extends StatelessWidget {
             children: [
               Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 4),
-              Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13)),
+              Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
             ],
           ),
         ),

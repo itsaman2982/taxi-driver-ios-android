@@ -49,7 +49,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 onChanged: (val) => setState(() => _doNotDisturb = val),
                 title: const Text('Do Not Disturb', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 subtitle: const Text('Pause all notifications except ride requests', style: TextStyle(fontSize: 12)),
-                activeColor: Colors.black,
+                activeThumbColor: Colors.black,
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -232,7 +232,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -255,7 +255,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -315,7 +315,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: Colors.black,
+                activeThumbColor: Colors.black,
               ),
             ],
           ),

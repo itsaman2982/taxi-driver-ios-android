@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});
@@ -47,7 +48,7 @@ class _OTPScreenState extends State<OTPScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(12),
+                color: Colors.blue.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -68,7 +69,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         color: Colors.black,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.blue.withAlpha(50),
+                          color: Colors.blue.withValues(alpha: 50 / 255),
 
                           width: 8,
                         ),
@@ -118,7 +119,7 @@ class _OTPScreenState extends State<OTPScreen> {
                     focusedPinTheme: focusedPinTheme,
                     pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                     showCursor: true,
-                    onCompleted: (pin) => print(pin),
+                    onCompleted: (pin) => AppLogger.debug('OTP Completed: $pin'),
                   ),
                   const SizedBox(height: 30),
                   // Resend Code
@@ -158,7 +159,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withAlpha(12),
+                      color: Colors.blue.withValues(alpha: 12 / 255),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

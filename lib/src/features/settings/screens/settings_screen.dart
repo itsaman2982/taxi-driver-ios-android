@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:taxi_driver/src/features/settings/screens/about_screen.dart';
 import 'package:taxi_driver/src/features/profile/screens/privacy_policy_screen.dart';
@@ -125,7 +127,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Notifications',
                 onTap: () {},
               ),
-
               _buildSectionHeader('SOUND & VIBRATION'),
               _buildSwitchTile(
                 icon: Icons.notifications_active,
@@ -151,7 +152,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: (val) => settings.setVibration(val),
                 activeColor: const Color(0xFF10B981),
               ),
-
               _buildSectionHeader('LEGAL & APP INFO'),
               _buildListTile(
                 icon: Icons.info_outline,
@@ -160,7 +160,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AboutScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const AboutScreen()),
                   );
                 },
               ),
@@ -171,7 +172,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const TermsConditionsScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const TermsConditionsScreen()),
                   );
                 },
               ),
@@ -182,11 +184,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const PrivacyPolicyScreen()),
                   );
                 },
               ),
-
               const SizedBox(height: 30),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -196,10 +198,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     backgroundColor: const Color(0xFFFEF2F2),
                     foregroundColor: const Color(0xFFEF4444),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.delete, size: 20),
-                  label: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Delete Account',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -240,9 +244,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Icon(icon, color: const Color(0xFF1E293B), size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
+      title: Text(title,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
       subtitle: subtitle != null
-          ? Text(subtitle, style: TextStyle(color: Colors.grey.shade500, fontSize: 13))
+          ? Text(subtitle,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 13))
           : null,
       trailing: Icon(Icons.chevron_right, color: Colors.grey.shade400),
       onTap: onTap,
@@ -255,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
-    Color activeColor = Colors.grey, 
+    Color activeColor = Colors.grey,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -267,13 +274,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Icon(icon, color: const Color(0xFF1E293B), size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
-      subtitle: Text(subtitle, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-      trailing: Switch(
+      title: Text(title,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)),
+      subtitle: Text(subtitle,
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+      trailing: Switch.adaptive(
         value: value,
         onChanged: onChanged,
-        activeColor: activeColor == Colors.grey ? Colors.grey.shade400 : activeColor, 
-        activeTrackColor: activeColor == const Color(0xFF10B981) ? const Color(0xFF10B981).withOpacity(0.4) : Colors.grey.shade300,
+        activeThumbColor:
+            activeColor == Colors.grey ? Colors.grey.shade400 : activeColor,
+        activeTrackColor: activeColor == const Color(0xFF10B981)
+            ? const Color(0xFF10B981).withValues(alpha: 0.4)
+            : Colors.grey.shade300,
         inactiveThumbColor: Colors.white,
         inactiveTrackColor: Colors.grey.shade200,
       ),

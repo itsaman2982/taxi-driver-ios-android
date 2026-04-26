@@ -7,37 +7,6 @@ import 'package:taxi_driver/src/features/navigation/main_navigation_screen.dart'
 
 enum TripStatus { completed, cancelled, disputed }
 
-class TripData {
-  final String dateStr;
-  final DateTime dateTime;
-  final String tripId;
-  final String price;
-  final String rating;
-  final String startLoc;
-  final String startSub;
-  final String endLoc;
-  final String endSub;
-  final String duration;
-  final String distance;
-  final TripStatus status;
-  final String? cancelledReason;
-
-  TripData({
-    required this.dateStr,
-    required this.dateTime,
-    required this.tripId,
-    required this.price,
-    required this.rating,
-    required this.startLoc,
-    required this.startSub,
-    required this.endLoc,
-    required this.endSub,
-    required this.duration,
-    required this.distance,
-    required this.status,
-    this.cancelledReason,
-  });
-}
 
 class TripHistoryScreen extends StatefulWidget {
   const TripHistoryScreen({super.key});
@@ -50,9 +19,6 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
   String _selectedTimeFilter = 'This Week';
   String _selectedStatusFilter = 'All';
 
-  // Initialize with empty list to avoid LateInitializationError during hot reloads
-  List<TripData> _allTrips = [];
-
   @override
   void initState() {
     super.initState();
@@ -61,21 +27,6 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
     });
   }
   
-  String _getMonth(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
-  }
-  
-  String _formatTime(DateTime date) {
-    int hour = date.hour;
-    String period = 'AM';
-    if (hour >= 12) {
-      period = 'PM';
-      if (hour > 12) hour -= 12;
-    }
-    if (hour == 0) hour = 12;
-    return '$hour:${date.minute.toString().padLeft(2, '0')} $period';
-  }
 
   List<dynamic> get _filteredTrips {
     final rideProvider = Provider.of<RideProvider>(context);
@@ -121,14 +72,23 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
   }
 
   String _formatDuration(dynamic duration) {
-    if (duration == null) return 'N/A';
+    if (duration == null) {
+      return 'N/A';
+    }
     double mins = 0;
-    if (duration is num) mins = duration.toDouble();
-    else if (duration is String) mins = double.tryParse(duration) ?? 0;
-    if (mins < 1) return '${(mins * 60).round()} sec';
+    if (duration is num) {
+      mins = duration.toDouble();
+    } else if (duration is String) {
+      mins = double.tryParse(duration) ?? 0;
+    }
+    if (mins < 1) {
+      return '${(mins * 60).round()} sec';
+    }
     int m = mins.floor();
     int s = ((mins - m) * 60).round();
-    if (m < 5 && s > 5) return '$m min $s sec';
+    if (m < 5 && s > 5) {
+      return '$m min $s sec';
+    }
     return '$m min';
   }
 
@@ -330,7 +290,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -352,7 +312,7 @@ class _TripHistoryScreenState extends State<TripHistoryScreen> {
                   Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: isCancelled ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                      color: isCancelled ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

@@ -66,6 +66,8 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
       }
     });
   }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -129,7 +131,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFEF4444),
                   side: const BorderSide(color: Color(0xFFFFE5E5)),
-                  backgroundColor: const Color(0xFFFFE5E5).withOpacity(0.3),
+                  backgroundColor: const Color(0xFFFFE5E5).withValues(alpha: 0.3),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
@@ -188,7 +190,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       offset: const Offset(0, -4),
                       blurRadius: 10,
                     ),
@@ -320,7 +322,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                     title: 'New Support Request',
                     description: 'Driver started a new chat session',
                   );
-                  if (!success && context.mounted) {
+                  if (!success && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Failed to start chat. Please try again.')),
                     );
@@ -374,7 +376,7 @@ class _LiveChatScreenState extends State<LiveChatScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
+                        color: Colors.black.withValues(alpha: 0.02),
                         blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),

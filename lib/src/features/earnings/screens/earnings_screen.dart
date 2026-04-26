@@ -40,20 +40,6 @@ class _EarningsScreenState extends State<EarningsScreen> {
     }
   }
 
-  int _getTripCountForPeriod(EarningsProvider earnings) {
-     switch (_selectedPeriod) {
-      case 'Today':
-        return earnings.earningsData['todayTrips'] ?? 0;
-      case 'This Week':
-        return (earnings.earningsData['weekTrips'] ?? 0); // Mocking if not in backend
-      case 'This Month':
-        return (earnings.earningsData['monthTrips'] ?? 0);
-      case 'Total':
-        return earnings.earningsData['totalTrips'] ?? 0;
-      default:
-        return earnings.earningsData['todayTrips'] ?? 0;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +140,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 24),
@@ -186,7 +172,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Row(
@@ -261,7 +247,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(Icons.show_chart, color: Colors.white),
@@ -273,7 +259,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _buildStatItem('$tripCount', 'Trips'),
-                                _buildStatItem('${(tripCount * 0.8).toStringAsFixed(1)}', 'Online Hrs'),
+                                _buildStatItem((tripCount * 0.8).toStringAsFixed(1), 'Online Hrs'),
                                 _buildStatItem('₹${avgTrip.toStringAsFixed(1)}', 'Avg/Trip'),
                               ],
                             ),
@@ -352,7 +338,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.credit_card, color: Colors.white, size: 20),
@@ -426,24 +412,6 @@ class _EarningsScreenState extends State<EarningsScreen> {
     );
   }
 
-  Widget _buildBonusItem(
-      String label, String amount, Color amountColor, Color dotColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Icon(Icons.circle, size: 8, color: dotColor),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: Colors.grey.shade600)),
-          const Spacer(),
-          Text(
-            amount,
-            style: TextStyle(color: amountColor, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTripCard(String time, String distance, String start, String end,
       String amount, String rating) {
@@ -501,7 +469,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
                Container(
                  padding: const EdgeInsets.all(2),
                  decoration: BoxDecoration(
-                   color: Colors.green.withOpacity(0.1),
+                   color: Colors.green.withValues(alpha: 0.1),
                    shape: BoxShape.circle
                  ),
                  child: const Icon(Icons.check, color: Colors.green, size: 14)
@@ -523,7 +491,7 @@ class _GraphPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.5)
+      ..color = Colors.white.withValues(alpha: 0.5)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -545,8 +513,8 @@ class _GraphPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-         Colors.white.withOpacity(0.2),
-         Colors.white.withOpacity(0.0),
+         Colors.white.withValues(alpha: 0.2),
+         Colors.white.withValues(alpha: 0.0),
       ],
     );
     

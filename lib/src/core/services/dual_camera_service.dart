@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class DualCameraService {
   static const MethodChannel _channel = MethodChannel('com.example.dual_camera');
@@ -40,7 +41,7 @@ class DualCameraService {
       }
       return false;
     } catch (e) {
-      print('Error starting dual camera: $e');
+      AppLogger.error('Error starting dual camera', e);
       return false;
     }
   }
@@ -53,7 +54,7 @@ class DualCameraService {
       frontTextureId = null;
       compositeTextureId = null;
     } catch (e) {
-      print('Error stopping dual camera: $e');
+      AppLogger.error('Error stopping dual camera', e);
     }
   }
 

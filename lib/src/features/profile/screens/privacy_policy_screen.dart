@@ -14,9 +14,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
+        title: const Column(
           children: [
-            const Text(
+            Text(
               'Privacy Policy',
               style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
@@ -125,18 +125,18 @@ class PrivacyPolicyScreen extends StatelessWidget {
                  borderRadius: BorderRadius.circular(12),
                  border: Border.all(color: const Color(0xFFD1FAE5)),
                ),
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: const [
-                   Row(children: [
-                     Icon(Icons.lock, color: Color(0xFF047857), size: 18),
-                     SizedBox(width: 8),
-                     Text('Encryption & Protection', style: TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold)),
-                   ]),
-                   SizedBox(height: 8),
-                   Text('All sensitive data is encrypted both in transit and at rest using industry-standard encryption protocols.', style: TextStyle(color: Color(0xFF065F46), fontSize: 12)),
-                 ],
-               ),
+               child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Icon(Icons.lock, color: Color(0xFF047857), size: 18),
+                    SizedBox(width: 8),
+                    Text('Encryption & Protection', style: TextStyle(color: Color(0xFF047857), fontWeight: FontWeight.bold)),
+                  ]),
+                  SizedBox(height: 8),
+                  Text('All sensitive data is encrypted both in transit and at rest using industry-standard encryption protocols.', style: TextStyle(color: Color(0xFF065F46), fontSize: 12)),
+                ],
+              ),
              ),
 
               const SizedBox(height: 24),

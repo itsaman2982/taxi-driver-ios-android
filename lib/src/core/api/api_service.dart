@@ -7,6 +7,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class ApiService {
   static const String baseUrl = 'https://taxi-back-rnci.onrender.com/api/';
@@ -54,7 +55,7 @@ class ApiService {
           storage: FileStorage('$appDocPath/.cookies/'),
         );
       } on MissingPluginException catch (e) {
-        print('Path provider not available, using memory cookies: $e');
+        AppLogger.warning('Path provider not available, using memory cookies: $e');
         jar = CookieJar();
       }
 
@@ -62,7 +63,7 @@ class ApiService {
       _ensureLogInterceptor();
       _completeInit();
     } catch (e) {
-      print('Error initializing CookieManager: $e');
+      AppLogger.error('Error initializing CookieManager', e);
       _ensureCookieManager(CookieJar());
       _ensureLogInterceptor();
       _completeInit();
@@ -81,7 +82,7 @@ class ApiService {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (obj) => print('API: $obj'),
+        logPrint: (obj) => AppLogger.debug('API: $obj'),
       ),
     );
     _hasLogInterceptor = true;
@@ -176,9 +177,9 @@ class ApiService {
       } else {
         message = e.response?.statusMessage ?? message;
       }
-      print('API Error [${e.response?.statusCode}]: $message');
+      AppLogger.error('API Error [${e.response?.statusCode}]: $message');
     } else {
-      print('API Error: ${e.message}');
+      AppLogger.error('API Error: ${e.message}');
     }
   }
 }

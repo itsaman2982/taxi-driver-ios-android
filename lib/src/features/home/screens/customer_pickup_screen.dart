@@ -7,7 +7,6 @@ import 'package:mappls_gl/mappls_gl.dart';
 import 'package:provider/provider.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
 import 'package:taxi_driver/src/core/providers/driver_provider.dart';
-import 'package:taxi_driver/src/core/providers/earnings_provider.dart';
 import 'package:taxi_driver/src/features/home/screens/trip_completed_screen.dart';
 import 'package:taxi_driver/src/features/home/screens/warehouse_return_screen.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,7 +14,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart' as dio_pkg;
 import 'package:taxi_driver/src/core/map/mappls_service.dart';
-import 'package:taxi_driver/src/features/home/screens/home_screen.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CustomerPickupScreen extends StatefulWidget {
   final Map<String, dynamic> ride;
@@ -25,7 +25,7 @@ class CustomerPickupScreen extends StatefulWidget {
   State<CustomerPickupScreen> createState() => _CustomerPickupScreenState();
 }
 
-class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
+class _CustomerPickupScreenState extends State<CustomerPickupScreen> with WidgetsBindingObserver {
   static const Set<String> _ignoredTrackingTypes = {
     'driver',
     'active_driver',
@@ -53,7 +53,6 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
   }
 
   String _status = 'accepted'; 
-  bool _completingRide = false;
   bool _breakdownResolvedOverride = false;
   Map<String, dynamic> _rideData = {};
   LatLng currentLocation = const LatLng(23.0225, 72.5714); 
@@ -65,7 +64,6 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
   List<Map<String, dynamic>> _trafficSegments = [];
   List<LatLng> _altRoutePoints = [];
   String _routeEta = '';
-  String _altRouteEta = '';
   String _routeDistance = '';
   final Map<String, LatLng> _trackingEntities = {};
   bool _mapStyleReady = false;
@@ -80,7 +78,6 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
   bool _followDriver = false;
   bool _fitRouteOnNextUpdate = true;
   DateTime _lastCameraMoveAt = DateTime.fromMillisecondsSinceEpoch(0);
-  String _lastRouteModeKey = '';
 
   bool get _isReplacementDriver {
     final driverData = Provider.of<DriverProvider>(context, listen: false).driver;
@@ -108,11 +105,11 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
   MediaStream? _interiorStream;
   MediaStream? _frontRoadStream;
   final Map<String, RTCPeerConnection> _peerConnections = {};
+  final Map<String, DateTime> _lastNativeConnectionRequest = {};
   
   MediaRecorder? _roadRecorder;
   MediaRecorder? _interiorRecorder;
   bool _isRecording = false;
-  bool _isMultiCamActive = false;
 
   // Native front camera MethodChannel (iOS only)
   static const _nativeFrontCam = MethodChannel('com.taxi.native_front_camera');
@@ -142,29 +139,71 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       _updateRoutePath(); 
     });
     
+    WidgetsBinding.instance.addObserver(this);
     _setupSocketListeners();
-    _initCamera();
+    _startCameraWithPermissions();
   }
+
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _stopNativeCamera();
+    } else if (state == AppLifecycleState.resumed) {
+      _startCameraWithPermissions();
+    }
+  }
+
+  Future<void> _stopNativeCamera() async {
+    if (Platform.isIOS && _nativeFrontCamStarted) {
+      try {
+        await _nativeFrontCam.invokeMethod('stopCapture');
+        _nativeFrontCamStarted = false;
+        AppLogger.info('[iOS] Native front camera stopped via lifecycle/dispose');
+      } catch (e) {
+        AppLogger.error('[iOS] Failed to stop native camera', e);
+      }
+    }
+  }
+
+  Future<void> _startCameraWithPermissions() async {
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      await _initCamera();
+    } else if (status.isPermanentlyDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera permission is permanently denied. Please enable it in settings.'),
+            duration: Duration(seconds: 5),
+            action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
+          ),
+        );
+      }
+    } else {
+      AppLogger.warning('Camera permission denied. Requesting again in 3 seconds...');
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) _startCameraWithPermissions();
+      });
+    }
+  }
+
+  bool _isInitializingCamera = false;
 
   Future<void> _initCamera() async {
     if (Platform.isIOS) {
-       // iOS: Back camera via flutter_webrtc (normal getUserMedia)
-       if (_frontRoadStream == null) {
-         try {
-           _frontRoadStream = await navigator.mediaDevices.getUserMedia({
-             'audio': false,
-             'video': {'facingMode': 'environment', 'width': 1280, 'height': 720, 'frameRate': 25},
-           });
-           debugPrint('✅ [iOS] Back camera stream ready (Cam 3: Road Ahead)');
-         } catch (e) {
-           debugPrint('❌ [iOS] Back camera failed: $e');
-         }
-       }
-       // iOS: Front camera via NATIVE pipeline (separate AVCaptureSession)
-       if (!_nativeFrontCamStarted) {
-         try {
-           await _nativeFrontCam.invokeMethod('startCapture');
-           _nativeFrontCamStarted = true;
+        // iOS: Front and Back cameras are handled by the Native MultiCam Engine
+        // Do NOT use getUserMedia to avoid hardware resource contention and freezes.
+        if (_nativeFrontCamStarted || _isInitializingCamera) return;
+        _isInitializingCamera = true;
+        try {
+          await Permission.camera.request();
+          final bool? started = await _nativeFrontCam.invokeMethod('startCapture');
+          if (started == true) {
+            _nativeFrontCamStarted = true;
+          } else {
+             AppLogger.warning('[iOS] Native front camera startCapture returned false - possible resource lock');
+           }
            // Listen for events from native pipeline (ICE candidates + state changes)
            _nativeFrontCam.setMethodCallHandler((call) async {
              final args = Map<String, dynamic>.from(call.arguments as Map? ?? {});
@@ -175,16 +214,17 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                final socket = driverProvider.socket;
                String adminSocketId = connId;
                String streamType = 'tablet_main';
-               for (final suffix in ['_tablet_main', '_phone_interior']) {
+               for (final suffix in ['_tablet_main', '_phone_interior', '_phone_front_road']) {
                  if (connId.endsWith(suffix)) {
                    adminSocketId = connId.substring(0, connId.length - suffix.length);
                    streamType = suffix.substring(1);
                    break;
                  }
                }
-               debugPrint('🧩 [iOS-NATIVE] Forwarding ICE for $streamType to $adminSocketId');
-               socket?.emit('webrtc_ice_candidate', {
+               AppLogger.debug('🧩 [iOS-NATIVE] Forwarding ICE for $streamType to $adminSocketId');
+               socket!.emit('webrtc_ice_candidate', {
                  'targetSocketId': adminSocketId,
+                 'adminSocketId': socket.id,
                  'target': 'admin',
                  'rideId': _extractId(widget.ride),
                  'type': streamType,
@@ -196,56 +236,46 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                });
 
              } else if (call.method == 'onIceStateChange') {
-               final state = args['state'] as String? ?? '';
-               final connId = args['connectionId'] as String? ?? '';
-               final streamType = args['streamType'] as String? ?? '';
+                final state = args['state'] as String? ?? '';
+                final connId = args['connectionId'] as String? ?? '';
+                final streamType = args['streamType'] as String? ?? '';
 
-               if (state == 'failed' || state == 'disconnected') {
-                 debugPrint('⚠️ [iOS-NATIVE] ICE $state for $connId — native restartIce triggered, waiting 8s...');
-                 // Give the native ICE restart 8 seconds to self-heal before forcing full Dart reconnect
-                 Future.delayed(const Duration(seconds: 8), () async {
-                   if (!mounted) return;
-                   final driverProvider = Provider.of<DriverProvider>(context, listen: false);
-                   final socket = driverProvider.socket;
-                   if (socket == null) return;
-                   String adminSocketId = connId;
-                   for (final suffix in ['_tablet_main', '_phone_interior']) {
-                     if (connId.endsWith(suffix)) {
-                       adminSocketId = connId.substring(0, connId.length - suffix.length);
-                       break;
-                     }
-                   }
-                   debugPrint('🔁 [iOS-NATIVE] Forcing full reconnect for $streamType');
-                   try { await _nativeFrontCam.invokeMethod('disposeConnection', {'connectionId': connId}); } catch (_) {}
-                   try {
-                     final offerResult = await _nativeFrontCam.invokeMethod('createOffer', {
-                       'connectionId': connId,
-                       'streamType': streamType,
-                     });
-                     final offer = Map<String, dynamic>.from(offerResult as Map);
-                     socket.emit('webrtc_offer', {
-                       'targetSocketId': adminSocketId,
-                       'rideId': _extractId(widget.ride),
-                       'type': streamType,
-                       'sdp': {'sdp': offer['sdp'], 'type': offer['type']},
-                     });
-                     debugPrint('📤 [iOS-NATIVE] Reconnect offer sent for $streamType');
-                   } catch (e) {
-                     debugPrint('❌ [iOS-NATIVE] Reconnect failed: $e');
-                   }
-                 });
-               }
-             }
+                if (state == 'failed' || state == 'disconnected' || state == 'closed') {
+                  AppLogger.warning('⚠️ [iOS-NATIVE] ICE $state for $connId — waiting 4s');
+                  Future.delayed(const Duration(seconds: 4), () async {
+                    if (!mounted) return;
+                    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+                    final socket = driverProvider.socket;
+                    if (socket == null) return;
+                    final driverId = (driverProvider.driver?['_id'] ?? driverProvider.driver?['id'] ?? '').toString();
+                    String adminSocketId = connId;
+                    for (final suffix in ['_tablet_main', '_phone_interior', '_phone_front_road']) {
+                      if (connId.endsWith(suffix)) {
+                        adminSocketId = connId.substring(0, connId.length - suffix.length);
+                        break;
+                      }
+                    }
+                    AppLogger.info('🔁 [iOS-NATIVE] Forcing full reconnect for $streamType');
+                    try { await _nativeFrontCam.invokeMethod('disposeConnection', {'connectionId': connId}); } catch (_) {}
+                    socket.emit('request_webrtc_stream', { 
+                       'driverId': driverId, 
+                       'adminSocketId': adminSocketId,
+                       'type': streamType 
+                    });
+                  });
+                }
+              }
            });
-           debugPrint('✅ [iOS] Native front camera started (Cam 1: Tablet Main)');
+           AppLogger.info('[iOS] Native front camera started (Cam 1: Tablet Main)');
          } catch (e) {
-           debugPrint('❌ [iOS] Native front camera failed: $e');
-         }
-       }
-       _startRecording();
-       return;
-    }
-    
+           AppLogger.error('[iOS] Native front camera failed', e);
+         } finally {
+            _isInitializingCamera = false;
+          }
+          _startRecording();
+          return; // CRITICAL: Stop here for iOS to prevent conflict
+        }
+
     try {
       final devices = await navigator.mediaDevices.enumerateDevices();
       final videoDevices = devices.where((device) => device.kind == 'videoinput').toList();
@@ -277,7 +307,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
         }
         _startRecording();
       } catch (e) {
-        debugPrint('Camera Error: $e');
+        AppLogger.error('Camera Error', e);
       }
     } catch (_) {}
   }
@@ -302,9 +332,9 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       }
 
       setState(() => _isRecording = true);
-      debugPrint('📹 [DASHCAM] Phone Recording started for Ride $rideId');
+      AppLogger.info('📹 [DASHCAM] Phone Recording started for Ride $rideId');
     } catch (e) {
-      debugPrint('❌ [DASHCAM] Start error: $e');
+      AppLogger.error('[DASHCAM] Start error', e);
     }
   }
 
@@ -327,14 +357,14 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       }
 
       setState(() => _isRecording = false);
-      debugPrint('📼 [DASHCAM] Phone Recording stopped. Initiating upload...');
+      AppLogger.info('📼 [DASHCAM] Phone Recording stopped. Initiating upload...');
 
-      if (rideId != null) {
+      if (_isRecording) {
         _uploadVideo(roadPath, 'road', rideId);
         _uploadVideo(interiorPath, 'interior', rideId);
       }
     } catch (e) {
-      debugPrint('❌ [DASHCAM] Stop error: $e');
+      AppLogger.error('[DASHCAM] Stop error', e);
     }
   }
 
@@ -344,6 +374,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
     if (!await file.exists()) return;
 
     try {
+      if (!mounted) return;
       final driverProvider = Provider.of<DriverProvider>(context, listen: false);
       final token = driverProvider.driver?['token'] ?? driverProvider.driver?['_id'] ?? driverProvider.driver?['id'] ?? '';
       
@@ -359,7 +390,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
         'file': await dio_pkg.MultipartFile.fromFile(path, filename: '${type}_$rideId.mp4'),
       });
 
-      debugPrint('📤 [PHONE-SURVEILLANCE] Archiving $type footage...');
+      AppLogger.info('📤 [PHONE-SURVEILLANCE] Archiving $type footage...');
       
       final response = await dio.post(
         uploadUrl, 
@@ -391,12 +422,12 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
             },
           ),
         );
-        debugPrint('✅ [PHONE-SURVEILLANCE] Archive Linked: $videoUrl');
+        AppLogger.info('✅ [PHONE-SURVEILLANCE] Archive Linked: $videoUrl');
       } else {
-        debugPrint('❌ [PHONE-SURVEILLANCE] Upload failed: ${response.data['message']}');
+        AppLogger.error('❌ [PHONE-SURVEILLANCE] Upload failed: ${response.data['message']}');
       }
     } catch (e) {
-      debugPrint('❌ [PHONE-SURVEILLANCE] Critical pipeline failure ($type): $e');
+      AppLogger.error('[PHONE-SURVEILLANCE] Critical pipeline failure ($type)', e);
     }
   }
 
@@ -617,7 +648,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
           final rawType = data['type']?.toString();
           
           if (adminSocketId == null) {
-            debugPrint('⚠️ [WEBRTC] request_webrtc_stream missing adminSocketId: $data');
+            AppLogger.warning('⚠️ [WEBRTC] request_webrtc_stream missing adminSocketId: $data');
             return;
           }
           
@@ -628,9 +659,17 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
           
           // iOS: Use the NATIVE multi-camera pipeline for stable dual-camera support
           if (Platform.isIOS && (streamType == 'tablet_main' || streamType == 'phone_interior' || streamType == 'phone_front_road')) {
+            final connectionId = '${adminSocketId}_$streamType';
+
+            // Debounce: If we recently handled a request for this exact stream, ignore
+            final lastRequest = _lastNativeConnectionRequest[connectionId];
+            if (lastRequest != null && DateTime.now().difference(lastRequest).inSeconds < 3) {
+              AppLogger.info('⏭️ [iOS-NATIVE] Ignoring redundant stream request for $streamType');
+              continue;
+            }
+            _lastNativeConnectionRequest[connectionId] = DateTime.now();
 
             await _initCamera(); // Ensures native front cam is started
-            final connectionId = '${adminSocketId}_$streamType';
             try {
               // Dispose previous native connection if exists
               try { await _nativeFrontCam.invokeMethod('disposeConnection', {'connectionId': connectionId}); } catch (_) {}
@@ -646,9 +685,9 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                 'type': streamType,
                 'sdp': {'sdp': offer['sdp'], 'type': offer['type']},
               });
-              debugPrint('📤 [iOS-NATIVE] Front camera offer sent for $streamType');
+              AppLogger.info('📤 [iOS-NATIVE] Front camera offer sent for $streamType');
             } catch (e) {
-              debugPrint('❌ [iOS-NATIVE] createOffer failed: $e');
+              AppLogger.error('[iOS-NATIVE] createOffer failed', e);
             }
             continue;
           }
@@ -716,15 +755,15 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
          // iOS: Forward answer to native side for all native streams
          if (Platform.isIOS && (type == 'tablet_main' || type == 'phone_interior' || type == 'phone_front_road')) {
 
-            debugPrint('📥 [iOS-NATIVE] Received Answer from $adminId for $type');
+            AppLogger.info('📥 [iOS-NATIVE] Received Answer from $adminId for $type');
             try {
                await _nativeFrontCam.invokeMethod('setAnswer', {
                   'connectionId': connectionKey,
                   'sdp': data['sdp']['sdp'],
                });
-               debugPrint('✅ [iOS-NATIVE] Answer set for $type');
+               AppLogger.info('✅ [iOS-NATIVE] Answer set for $type');
             } catch (e) {
-               debugPrint('❌ [iOS-NATIVE] setAnswer failed: $e');
+               AppLogger.error('[iOS-NATIVE] setAnswer failed', e);
             }
             return;
          }
@@ -746,7 +785,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
          // iOS: Forward ICE candidates to native side for all native streams
          if (Platform.isIOS && (type == 'tablet_main' || type == 'phone_interior' || type == 'phone_front_road')) {
 
-            debugPrint('📥 [iOS-NATIVE] Received ICE candidate from $adminId for $type');
+            AppLogger.debug('📥 [iOS-NATIVE] Received ICE candidate from $adminId for $type');
             try {
               final c = data['candidate'];
               await _nativeFrontCam.invokeMethod('addIceCandidate', {
@@ -756,7 +795,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                 'sdpMLineIndex': c['sdpMLineIndex'],
               });
             } catch (e) {
-              debugPrint('❌ [iOS-NATIVE] addIceCandidate failed: $e');
+              AppLogger.error('[iOS-NATIVE] addIceCandidate failed', e);
             }
             return;
          }
@@ -777,7 +816,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
 
   void _handleCancellation() async {
     if (!mounted) return;
-    debugPrint('🛑 [DASHCAM] Ride cancelled. Archiving footage before exiting...');
+    AppLogger.info('🛑 [DASHCAM] Ride cancelled. Archiving footage before exiting...');
     await _stopAndUploadRecording();
     _positionStream?.cancel();
     if (mounted) Navigator.of(context).pop();
@@ -793,7 +832,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
         if (mounted) _updateLocation(position);
       });
     } catch (e) {
-      debugPrint("Location error: $e");
+      AppLogger.error('Location error', e);
     }
   }
 
@@ -887,7 +926,6 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
           _routePoints = List<LatLng>.from(routeData['routePoints'] ?? const []);
           _trafficSegments = List<Map<String, dynamic>>.from(routeData['trafficSegments'] ?? const []);
           _altRoutePoints = List<LatLng>.from(routeData['altRoutePoints'] ?? const []);
-          _altRouteEta = routeData['altRouteEta']?.toString() ?? '';
           final duration = (routeData['durationSeconds'] as num?)?.toDouble() ?? 0;
           final distance = (routeData['distanceMeters'] as num?)?.toDouble();
           _routeEta = duration > 3600 * 24 ? '> 1 day' : _formatDuration(duration);
@@ -922,7 +960,9 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
         await _updateMapOverlays();
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      AppLogger.error('Error getting route', e);
+    }
     final meters = Geolocator.distanceBetween(start.latitude, start.longitude, end.latitude, end.longitude);
     final km = meters / 1000.0;
     final etaMinutes = km <= 0.1 ? 1 : ((km / 28.0) * 60).ceil();
@@ -984,7 +1024,9 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       await _mapController!.addImage('user-marker', bytesUser, false);
       final bytesDrop = (await rootBundle.load('assets/drop_marker.png')).buffer.asUint8List();
       await _mapController!.addImage('drop-marker', bytesDrop, false);
-    } catch (e) {}
+    } catch (e) {
+      AppLogger.error('Error ensuring map assets', e);
+    }
   }
 
   Future<void> _setupMapOverlays() async {
@@ -1059,31 +1101,78 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
     }
   }
 
+  bool _isUpdatingOverlays = false;
+
   Future<void> _updateMapOverlays() async {
-    if (_mapController == null || !_mapStyleReady) return;
-    await _syncStaticSymbols();
-    await _updateDriverSymbol();
-    await _updateTrackingSymbols();
-    if (_routeLine != null) { await _mapController!.removeLine(_routeLine!); _routeLine = null; }
-    if (_altRouteLine != null) { await _mapController!.removeLine(_altRouteLine!); _altRouteLine = null; }
-    for (final line in _trafficLines) { await _mapController!.removeLine(line); }
-    _trafficLines.clear();
-    if (_routePoints.isNotEmpty) {
-      _routeLine = await _mapController!.addLine(LineOptions(geometry: _routePoints, lineColor: '#FFFFFF', lineWidth: 7.2, lineOpacity: 0.92));
-      if (_trafficSegments.isNotEmpty) {
-        for (final segment in _trafficSegments) {
-          final points = (segment['points'] as List?)?.whereType<LatLng>().toList() ?? const <LatLng>[];
-          if (points.length < 2) continue;
-          final line = await _mapController!.addLine(LineOptions(geometry: points, lineColor: _lineColorHex(segment['color'], fallback: '#2196F3'), lineWidth: 4.8, lineOpacity: 0.98));
+    if (_mapController == null || !_mapStyleReady || _isUpdatingOverlays) return;
+    _isUpdatingOverlays = true;
+    try {
+      await _syncStaticSymbols();
+      await _updateDriverSymbol();
+      await _updateTrackingSymbols();
+      
+      if (_routeLine != null) { 
+        await _mapController!.removeLine(_routeLine!); 
+        _routeLine = null; 
+      }
+      if (_altRouteLine != null) { 
+        await _mapController!.removeLine(_altRouteLine!); 
+        _altRouteLine = null; 
+      }
+      
+      // Fix: Copy list to avoid concurrent modification during async iteration
+      final linesToRemove = List<Line>.from(_trafficLines);
+      _trafficLines.clear();
+      for (final line in linesToRemove) { 
+        await _mapController!.removeLine(line); 
+      }
+      
+      if (_routePoints.isNotEmpty) {
+        _routeLine = await _mapController!.addLine(LineOptions(
+          geometry: _routePoints, 
+          lineColor: '#FFFFFF', 
+          lineWidth: 7.2, 
+          lineOpacity: 0.92
+        ));
+        
+        if (_trafficSegments.isNotEmpty) {
+          for (final segment in _trafficSegments) {
+            final points = (segment['points'] as List?)?.whereType<LatLng>().toList() ?? const <LatLng>[];
+            if (points.length < 2) continue;
+            final line = await _mapController!.addLine(LineOptions(
+              geometry: points, 
+              lineColor: _lineColorHex(segment['color'], fallback: '#2196F3'), 
+              lineWidth: 4.8, 
+              lineOpacity: 0.98
+            ));
+            _trafficLines.add(line);
+          }
+        } else {
+          final line = await _mapController!.addLine(LineOptions(
+            geometry: _routePoints, 
+            lineColor: '#2563EB', 
+            lineWidth: 4.8, 
+            lineOpacity: 0.98
+          ));
           _trafficLines.add(line);
         }
-      } else {
-        final line = await _mapController!.addLine(LineOptions(geometry: _routePoints, lineColor: '#2563EB', lineWidth: 4.8, lineOpacity: 0.98));
-        _trafficLines.add(line);
+        if (_fitRouteOnNextUpdate) { 
+          _fitRouteOnNextUpdate = false; 
+          _followDriver = false; 
+          await _recenterActiveRoute(); 
+        }
       }
-      if (_fitRouteOnNextUpdate) { _fitRouteOnNextUpdate = false; _followDriver = false; await _recenterActiveRoute(); }
+      if (_altRoutePoints.isNotEmpty) { 
+        _altRouteLine = await _mapController!.addLine(LineOptions(
+          geometry: _altRoutePoints, 
+          lineColor: '#4F46E5', 
+          lineWidth: 3.4, 
+          lineOpacity: 0.42
+        )); 
+      }
+    } finally {
+      _isUpdatingOverlays = false;
     }
-    if (_altRoutePoints.isNotEmpty) { _altRouteLine = await _mapController!.addLine(LineOptions(geometry: _altRoutePoints, lineColor: '#4F46E5', lineWidth: 3.4, lineOpacity: 0.42)); }
   }
 
   bool _canMoveCamera() {
@@ -1100,7 +1189,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
   String _lineColorHex(dynamic value, {String fallback = '#2196F3'}) {
     if (value is String && value.isNotEmpty) return value;
     if (value is Color) {
-      final hex = value.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase();
+      final hex = value.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase();
       return '#$hex';
     }
     return fallback;
@@ -1168,7 +1257,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
     final String rideId = _extractId(widget.ride) ?? '';
     final String breakdownId = _extractId(widget.ride['breakdownId'] ?? widget.ride['id']) ?? '';
 
-    setState(() { _completingRide = true; });
+    // setState(() { _completingRide = true; });
 
     try {
       if (isReplacement) {
@@ -1185,16 +1274,21 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       }
 
       String nextStatus = '';
-      if (status == 'accepted' || status == 'assigned') nextStatus = 'arrived';
-      else if (status == 'arrived' || status == 'replacing') nextStatus = 'started';
-      else if (status == 'started' || status == 'ongoing' || status == 'picked_up') { _showPaymentSelectionSheet(); return; }
+      if (status == 'accepted' || status == 'assigned') {
+        nextStatus = 'arrived';
+      } else if (status == 'arrived' || status == 'replacing') {
+        nextStatus = 'started';
+      } else if (status == 'started' || status == 'ongoing' || status == 'picked_up') {
+        _showPaymentSelectionSheet();
+        return;
+      }
 
       if (nextStatus.isNotEmpty) {
         final success = await driverProvider.updateRideStatus(rideId, nextStatus);
         if (success && mounted) { setState(() { _status = nextStatus; }); unawaited(_updateMapOverlays()); _updateRoutePath(); }
       }
     } finally {
-      if (mounted) setState(() { _completingRide = false; });
+      // if (mounted) setState(() { _completingRide = false; });
     }
   }
 
@@ -1215,12 +1309,12 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
             child: Column(
               children: [
                 Container(
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12)]),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 12)]),
                   child: IconButton(tooltip: 'Route overview', onPressed: () { setState(() { _followDriver = false; _fitRouteOnNextUpdate = true; }); _recenterActiveRoute(); }, icon: const Icon(Icons.center_focus_strong_rounded, color: Colors.black87)),
                 ),
                 const SizedBox(height: 10),
                 Container(
-                  decoration: BoxDecoration(color: _followDriver ? Colors.black : Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 12)]),
+                  decoration: BoxDecoration(color: _followDriver ? Colors.black : Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 12)]),
                   child: IconButton(tooltip: 'Focus on driver', onPressed: () { setState(() { _followDriver = true; }); _focusOnDriver(); }, icon: Icon(Icons.navigation_rounded, color: _followDriver ? Colors.white : Colors.black87)),
                 ),
               ],
@@ -1235,12 +1329,12 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.white), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 20, offset: const Offset(0, 10))]),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: BorderRadius.circular(24), border: Border.all(color: Colors.white), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, 10))]),
                     child: Row(
                       children: [
                         Stack(
                           children: [
-                            Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5)), child: const CircleAvatar(radius: 24, backgroundColor: Color(0xFFF0F0F0), child: Icon(Icons.person, color: Colors.black54))),
+                            Container(decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1.5)), child: const CircleAvatar(radius: 24, backgroundColor: Color(0xFFF0F0F0), child: Icon(Icons.person, color: Colors.black54))),
                             Positioned(bottom: 0, right: 0, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)))),
                           ],
                         ),
@@ -1269,7 +1363,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                           children: [
                             Text('₹${ride['fare']}', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 22, letterSpacing: -0.5)),
                             const SizedBox(height: 4),
-                            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.blue.withOpacity(0.15), borderRadius: BorderRadius.circular(8)), child: const Text('LIVE', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w800, fontSize: 9, letterSpacing: 0.5))),
+                            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)), child: const Text('LIVE', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w800, fontSize: 9, letterSpacing: 0.5))),
                           ],
                         ),
                       ],
@@ -1288,14 +1382,14 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.95), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.white), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))]),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.95), borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.white), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 5))]),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.access_time_filled_rounded, color: Colors.blue, size: 18), const SizedBox(width: 6), Text(_routeEta, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 14))]),
                         if (_routeDistance.isNotEmpty) ...[
                           const SizedBox(height: 8),
-                          Container(width: 30, height: 2, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
+                          Container(width: 30, height: 2, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(2))),
                           const SizedBox(height: 8),
                           Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.route_rounded, color: Colors.black54, size: 18), const SizedBox(width: 6), Text(_routeDistance, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 14))]),
                         ],
@@ -1309,7 +1403,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
             bottom: 0, left: 0, right: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, -5))]),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, -5))]),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1340,7 +1434,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      InkWell(onTap: _showBreakdownConfirm, borderRadius: BorderRadius.circular(20), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.red.withOpacity(0.08), borderRadius: BorderRadius.circular(20)), child: const Icon(Icons.warning_rounded, color: Colors.red, size: 28))),
+                      InkWell(onTap: _showBreakdownConfirm, borderRadius: BorderRadius.circular(20), child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(20)), child: const Icon(Icons.warning_rounded, color: Colors.red, size: 28))),
                     ],
                   ),
                 ],
@@ -1386,18 +1480,19 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
 
   Future<void> _completeRideFinishing() async {
     Navigator.pop(context);
-    setState(() => _completingRide = true);
+    // setState(() => _completingRide = true);
     try {
       final rideId = _extractId(widget.ride) ?? '';
       await _stopAndUploadRecording();
+      if (!mounted) return;
       final success = await Provider.of<DriverProvider>(context, listen: false).updateRideStatus(rideId, 'completed');
       if (success && mounted) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => TripCompletedScreen(ride: _rideData.isNotEmpty ? _rideData : widget.ride)));
       }
     } catch (e) {
-      debugPrint('❌ Error completing ride: $e');
+      AppLogger.error('Error completing ride', e);
     } finally {
-      if (mounted) setState(() => _completingRide = false);
+      // if (mounted) setState(() => _completingRide = false);
     }
   }
 
@@ -1427,7 +1522,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
         child: Container(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withValues(alpha: 0.6),
           child: Center(
             child: Container(
               margin: const EdgeInsets.all(24),
@@ -1436,7 +1531,7 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                   Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.warning_rounded, color: Colors.red, size: 48)),
+                   Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), shape: BoxShape.circle), child: const Icon(Icons.warning_rounded, color: Colors.red, size: 48)),
                   const SizedBox(height: 24),
                   const Text('Vehicle Breakdown', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                   const SizedBox(height: 12),
@@ -1454,6 +1549,8 @@ class _CustomerPickupScreenState extends State<CustomerPickupScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopNativeCamera();
     _positionStream?.cancel();
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     final socket = driverProvider.socket;

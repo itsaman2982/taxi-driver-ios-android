@@ -257,7 +257,7 @@ class _AddBankAccountScreenState extends State<AddBankAccountScreen> {
               _buildLabel('Account Type', true),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedAccountType,
+                initialValue: _selectedAccountType,
                 decoration: InputDecoration(
                   hintText: 'Select account type',
                   hintStyle: TextStyle(color: Colors.grey.shade400),

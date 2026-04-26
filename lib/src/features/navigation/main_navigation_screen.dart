@@ -7,20 +7,24 @@ import 'package:taxi_driver/src/features/profile/screens/profile_screen.dart';
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
 
-  static final GlobalKey<_MainNavigationScreenState> navigationKey = GlobalKey<_MainNavigationScreenState>();
+  static final GlobalKey<MainNavigationScreenState> navigationKey = GlobalKey<MainNavigationScreenState>();
 
   static void goToHome(BuildContext context) {
-    navigationKey.currentState?.setState(() {
-      navigationKey.currentState?._currentIndex = 0;
-    });
+    navigationKey.currentState?.setIndex(0);
   }
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  State<MainNavigationScreen> createState() => MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+
+  void setIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
   
   // Create separate navigation keys for each tab to maintain their own navigation stacks
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -62,10 +66,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         body: IndexedStack(
           index: _currentIndex,
           children: [
-            _buildNavigator(0, HomeScreen()),
-            _buildNavigator(1, TripHistoryScreen()),
-            _buildNavigator(2, NotificationsScreen()),
-            _buildNavigator(3, ProfileScreen()),
+            _buildNavigator(0, const HomeScreen()),
+            _buildNavigator(1, const TripHistoryScreen()),
+            _buildNavigator(2, const NotificationsScreen()),
+            _buildNavigator(3, const ProfileScreen()),
           ],
         ),
         bottomNavigationBar: Container(
@@ -73,7 +77,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),

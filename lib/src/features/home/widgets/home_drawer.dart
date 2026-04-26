@@ -149,7 +149,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                     Switch(
                       value: provider.driver?['isOnline'] ?? false,
                       onChanged: (value) => provider.toggleOnlineStatus(value),
-                      activeColor: Colors.black,
+                      activeThumbColor: Colors.black,
                     ),
                   ],
                 ),
@@ -321,9 +321,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
                     ],
                   ),
                 );
-                if (confirm == true && mounted) {
-                  Provider.of<DriverProvider>(context, listen: false).logout();
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                if (confirm == true && context.mounted) {
+                  final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+                  final navigator = Navigator.of(context);
+                  driverProvider.logout();
+                  navigator.popUntil((route) => route.isFirst);
                 }
               },
               child: Row(
@@ -332,7 +334,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.logout, color: Colors.red),

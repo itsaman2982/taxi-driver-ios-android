@@ -18,10 +18,10 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   Future<void> _pickDocument(String documentType) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        final provider = Provider.of<RegistrationProvider>(context, listen: false);
-        provider.setDocument(documentType, File(image.path));
-      }
+      if (image == null) return;
+      if (!mounted) return;
+      final provider = Provider.of<RegistrationProvider>(context, listen: false);
+      provider.setDocument(documentType, File(image.path));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -34,10 +34,10 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   Future<void> _takePhoto(String documentType) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-      if (image != null) {
-        final provider = Provider.of<RegistrationProvider>(context, listen: false);
-        provider.setDocument(documentType, File(image.path));
-      }
+      if (image == null) return;
+      if (!mounted) return;
+      final provider = Provider.of<RegistrationProvider>(context, listen: false);
+      provider.setDocument(documentType, File(image.path));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter ${documentType.replaceAllMapped(RegExp('([A-Z])'), (m) => ' ' + m.group(0)!).capitalize()} Details'),
+          title: Text('Enter ${documentType.replaceAllMapped(RegExp('([A-Z])'), (m) => ' ${m.group(0)!}').capitalize()} Details'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -150,7 +150,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ApplicationStatusScreen()),
+      MaterialPageRoute(builder: (context) => const ApplicationStatusScreen()),
     );
   }
 
@@ -206,7 +206,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(12),
+                color: Colors.blue.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -221,7 +221,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withAlpha(12),
+                  color: Colors.yellow.withValues(alpha: 12 / 255),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -244,7 +244,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                             color: Colors.black,
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.blue.withAlpha(50),
+                              color: Colors.blue.withValues(alpha: 50 / 255),
                               width: 8,
                             ),
                           ),
@@ -330,7 +330,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withAlpha(12),
+                          color: Colors.blue.withValues(alpha: 12 / 255),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -386,15 +386,15 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                         TextSpan(
                           text: 'Your documents are encrypted and secure. We comply with all data protection regulations.\n\nBy uploading, you agree to our ',
                           style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                          children: [
+                          children: const [
                             TextSpan(
                               text: 'Terms of Service',
-                              style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                              style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
                             ),
-                            const TextSpan(text: ' and '),
+                            TextSpan(text: ' and '),
                             TextSpan(
                               text: 'Privacy Policy',
-                              style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                              style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
                             ),
                           ],
                         ),
@@ -431,7 +431,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         border: Border.all(color: uploadedFile != null ? Colors.green : Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(20),
+            color: Colors.grey.withValues(alpha: 20 / 255),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -544,7 +544,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         border: Border.all(color: provider.documents['kyc'] != null ? Colors.green : Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(20),
+            color: Colors.grey.withValues(alpha: 20 / 255),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

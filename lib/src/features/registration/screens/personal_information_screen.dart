@@ -59,7 +59,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       });
 
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => DocumentUploadScreen()),
+        MaterialPageRoute(builder: (context) => const DocumentUploadScreen()),
       );
     }
   }
@@ -116,7 +116,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: Colors.blue.withAlpha(12),
+                color: Colors.blue.withValues(alpha: 12 / 255),
                 shape: BoxShape.circle,
               ),
             ),
@@ -131,7 +131,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 width: 300,
                 height: 300,
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withAlpha(12),
+                  color: Colors.yellow.withValues(alpha: 12 / 255),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -154,7 +154,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           color: Colors.black,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.blue.withAlpha(50),
+                            color: Colors.blue.withValues(alpha: 50 / 255),
                             width: 8,
                           ),
                         ),
@@ -323,7 +323,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withAlpha(12),
+                        color: Colors.blue.withValues(alpha: 12 / 255),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -373,12 +373,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       TextSpan(
                         text: 'By continuing, you agree to our ',
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                        children: [
+                        children: const [
                           TextSpan(
                             text: 'Terms of Service',
                             style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
                           ),
-                          const TextSpan(text: ' and '),
+                          TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
                             style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),

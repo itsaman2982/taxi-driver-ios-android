@@ -1,26 +1,27 @@
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:taxi_driver/src/core/api/api_service.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
   SocketService._internal();
 
-  IO.Socket? _socket;
-  IO.Socket? get socket => _socket;
+  io.Socket? _socket;
+  io.Socket? get socket => _socket;
 
   void connect(String driverId) {
     if (_socket != null && _socket!.connected) {
-      print('🔌 Socket already connected');
+      AppLogger.info('Socket already connected');
       return;
     }
 
     // Remove '/api/' from baseUrl for socket connection
     final baseUrl = ApiService.baseUrl.replaceAll('/api/', '');
     
-    _socket = IO.io(
+    _socket = io.io(
       baseUrl,
-      IO.OptionBuilder()
+      io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
           .setExtraHeaders({'driver-id': driverId})
@@ -30,7 +31,7 @@ class SocketService {
     _socket!.connect();
 
     _socket!.onConnect((_) {
-      print('✅ Driver socket connected');
+      AppLogger.info('Driver socket connected');
       // Join driver-specific room
       _socket!.emit('join_room', 'driver_$driverId');
       // Join global driver room for fallback broadcasts
@@ -38,21 +39,21 @@ class SocketService {
     });
 
     _socket!.onDisconnect((_) {
-      print('❌ Driver socket disconnected');
+      AppLogger.warning('Driver socket disconnected');
     });
 
     _socket!.onError((error) {
-      print('⚠️ Socket error: $error');
+      AppLogger.error('Socket error', error);
     });
 
     _socket!.onConnectError((error) {
-       print('⚠️ Socket connection error: $error');
+       AppLogger.error('Socket connection error', error);
     });
   }
 
   void joinRideRoom(String rideId) {
     if (_socket != null && _socket!.connected) {
-       print('📍 [SOCKET] Joining Ride Room: ride_$rideId');
+       AppLogger.info('[SOCKET] Joining Ride Room: ride_$rideId');
        _socket!.emit('join_room', 'ride_$rideId');
     }
   }
@@ -68,7 +69,7 @@ class SocketService {
       _socket!.disconnect();
       _socket!.dispose();
       _socket = null;
-      print('🔌 Socket disconnected and disposed');
+      AppLogger.info('Socket disconnected and disposed');
     }
   }
 
@@ -76,7 +77,7 @@ class SocketService {
     if (_socket != null && _socket!.connected) {
       _socket!.emit(event, data);
     } else {
-      print('⚠️ Cannot emit $event: Socket not connected');
+      AppLogger.warning('Cannot emit $event: Socket not connected');
     }
   }
 
@@ -88,3 +89,4 @@ class SocketService {
     _socket?.off(event);
   }
 }
+

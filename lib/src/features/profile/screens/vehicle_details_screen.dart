@@ -30,7 +30,7 @@ class VehicleDetailsScreen extends StatelessWidget {
           
           // If fleet driver but vehicle is just an ID (not map), it will be null.
           // Trigger a silent refresh to populate the data.
-          if (driverProvider.isFleetDriver && driver?['vehicleId'] != null && !(driver?['vehicleId'] is Map)) {
+          if (driverProvider.isFleetDriver && driver?['vehicleId'] != null && driver?['vehicleId'] is! Map) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               driverProvider.refreshProfile();
             });
@@ -61,7 +61,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -149,7 +149,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                  boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -208,7 +208,7 @@ class VehicleDetailsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                  boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -275,10 +275,10 @@ class VehicleDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFBAE6FD)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(Icons.verified, color: Color(0xFF0369A1), size: 20),
-                    const SizedBox(width: 12),
+                    Icon(Icons.verified, color: Color(0xFF0369A1), size: 20),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'This vehicle is officially assigned to you by the company fleet manager.',
@@ -395,13 +395,13 @@ class VehicleDetailsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.5)), // slightly darker border
+        border: Border.all(color: color.withValues(alpha: 0.5)), // slightly darker border
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),

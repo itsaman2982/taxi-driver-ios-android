@@ -110,17 +110,18 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         });
         
         if (updateResponse['success'] == true) {
-          await Provider.of<DriverProvider>(context, listen: false).refreshProfile();
-          
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+          if (context.mounted) {
+            final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+            final messenger = ScaffoldMessenger.of(context);
+            await driverProvider.refreshProfile();
+            messenger.showSnackBar(
               const SnackBar(content: Text('Profile photo updated successfully!')),
             );
           }
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update photo: $e')),
         );
@@ -157,10 +158,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       final response = await ApiService().patch('users/$driverId', updateData);
 
       if (response['success'] == true) {
-        await Provider.of<DriverProvider>(context, listen: false).refreshProfile();
-        
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+          final messenger = ScaffoldMessenger.of(context);
+          await driverProvider.refreshProfile();
+          messenger.showSnackBar(
             const SnackBar(content: Text('Profile updated successfully!')),
           );
         }
@@ -232,7 +234,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -310,7 +312,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -463,7 +465,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 'Your personal details are encrypted and securely stored. We never share your information without your consent.',
-                                style: TextStyle(color: const Color(0xFF065F46).withOpacity(0.8), fontSize: 11, height: 1.4),
+                                style: TextStyle(color: const Color(0xFF065F46).withValues(alpha: 0.8), fontSize: 11, height: 1.4),
                               ),
                             ],
                           ),

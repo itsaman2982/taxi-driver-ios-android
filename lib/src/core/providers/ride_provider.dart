@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class RideProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -33,7 +34,7 @@ class RideProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       _activeRides = [];
-      print('❌ Error fetching active rides: $e');
+      AppLogger.error('Error fetching active rides', e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -56,7 +57,7 @@ class RideProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       _rideHistory = [];
-      print('❌ Error fetching ride history: $e');
+      AppLogger.error('Error fetching ride history', e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -75,7 +76,7 @@ class RideProvider extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('❌ Error accepting ride: $e');
+      AppLogger.error('Error accepting ride', e);
       return false;
     }
   }
@@ -94,7 +95,7 @@ class RideProvider extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print('❌ Error updating ride status: $e');
+      AppLogger.error('Error updating ride status', e);
       return false;
     }
   }
@@ -104,3 +105,4 @@ class RideProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

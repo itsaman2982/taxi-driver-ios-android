@@ -3,6 +3,7 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:taxi_driver/src/core/utils/app_logger.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -79,11 +80,11 @@ class NotificationService {
       await _audioPlayer.setLoopMode(LoopMode.one);
       await _audioPlayer.play();
     } catch (e) {
-      print('❌ just_audio play error: $e');
+      AppLogger.error('just_audio play error', e);
     }
 
     // Vibrate
-    if (await Vibration.hasVibrator() ?? false) {
+    if (await Vibration.hasVibrator() == true) {
       Vibration.vibrate(pattern: [500, 1000], repeat: 0);
     }
 
@@ -97,7 +98,7 @@ class NotificationService {
         isEmergency: isEmergency,
       );
     } catch (e) {
-      print('❌ local_notifications error: $e');
+      AppLogger.error('local_notifications error', e);
     }
   }
 
@@ -108,7 +109,7 @@ class NotificationService {
       _isPlaying = false;
       await _notificationsPlugin.cancelAll();
     } catch (e) {
-      print('❌ Error stopping notification: $e');
+      AppLogger.error('Error stopping notification', e);
     }
   }
 
@@ -116,3 +117,4 @@ class NotificationService {
     _audioPlayer.dispose();
   }
 }
+

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:taxi_driver/src/core/api/api_service.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SupportProvider extends ChangeNotifier {
   final ApiService _apiService = ApiService();
-  IO.Socket? _socket;
+  io.Socket? _socket;
 
   List<dynamic> _tickets = [];
   Map<String, dynamic>? _activeTicket;
@@ -21,7 +21,7 @@ class SupportProvider extends ChangeNotifier {
   void initSocket(String baseUrl) {
     if (_socket != null) return;
     
-    _socket = IO.io(baseUrl, IO.OptionBuilder()
+    _socket = io.io(baseUrl, io.OptionBuilder()
       .setTransports(['websocket'])
       .disableAutoConnect()
       .build());

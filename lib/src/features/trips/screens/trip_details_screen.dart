@@ -10,15 +10,23 @@ class TripDetailsScreen extends StatelessWidget {
   const TripDetailsScreen({super.key, this.ride});
 
   String _formatDuration(dynamic duration) {
-    if (duration == null) return 'N/A';
+    if (duration == null) {
+      return 'N/A';
+    }
     double mins = 0;
-    if (duration is num)
+    if (duration is num) {
       mins = duration.toDouble();
-    else if (duration is String) mins = double.tryParse(duration) ?? 0;
-    if (mins < 1) return '${(mins * 60).round()} sec';
+    } else if (duration is String) {
+      mins = double.tryParse(duration) ?? 0;
+    }
+    if (mins < 1) {
+      return '${(mins * 60).round()} sec';
+    }
     int m = mins.floor();
     int s = ((mins - m) * 60).round();
-    if (m < 5 && s > 5) return '$m min $s sec';
+    if (m < 5 && s > 5) {
+      return '$m min $s sec';
+    }
     return '$m min';
   }
 
@@ -112,7 +120,7 @@ class TripDetailsScreen extends StatelessWidget {
                                   Polyline(
                                     points: [pickupPoint, dropPoint],
                                     strokeWidth: 4,
-                                    color: Colors.black.withOpacity(0.15),
+                                    color: Colors.black.withValues(alpha: 0.15),
                                   ),
                                 ],
                               ),
@@ -150,7 +158,7 @@ class TripDetailsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 8,
                           ),
                         ],
@@ -681,45 +689,4 @@ class TripDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRatingCard(String rating, String label, Color bgColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            rating,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              5,
-              (index) => const Icon(
-                Icons.star,
-                color: Color(0xFFF59E0B),
-                size: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

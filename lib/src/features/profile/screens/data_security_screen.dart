@@ -44,7 +44,7 @@ class DataSecurityScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.shield, color: Colors.white, size: 24),
@@ -121,7 +121,7 @@ class DataSecurityScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade200),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset:const Offset(0, 2)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset:const Offset(0, 2)),
                 ],
               ),
               child: Row(
@@ -146,7 +146,7 @@ class DataSecurityScreen extends StatelessWidget {
                   Switch(
                     value: true, 
                     onChanged: (v) {},
-                    activeColor: Colors.black,
+                    activeThumbColor: Colors.black,
                   )
                 ],
               ),
@@ -239,7 +239,7 @@ class DataSecurityScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset:const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset:const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -280,7 +280,7 @@ class DataSecurityScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
          boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset:const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset:const Offset(0, 2)),
         ],
       ),
       child: Row(

@@ -76,9 +76,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         
         if (updateResponse['success'] == true) {
           // 3. Refresh Provider
-          await Provider.of<DriverProvider>(context, listen: false).refreshProfile();
+          if (context.mounted) {
+            await Provider.of<DriverProvider>(context, listen: false).refreshProfile();
+          }
           
-          if (mounted) {
+          if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Profile photo updated!')),
             );
@@ -86,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Upload failed: $e')),
         );
@@ -155,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
